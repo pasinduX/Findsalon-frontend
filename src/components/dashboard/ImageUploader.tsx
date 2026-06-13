@@ -1,8 +1,8 @@
 import { useState, useRef } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { salonService } from "@/services/salon.service";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, X, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Upload, Loader2 } from "lucide-react";
+import { buildImageUrl } from "@/lib/utils";
 
 interface ImageUploaderProps {
   salonId: string;
@@ -28,19 +28,27 @@ const ImageUploader = ({ salonId, currentUrl, onUpload, label = "Upload Image", 
     setPreview(localUrl);
 
     setUploading(true);
-    const ext = file.name.split(".").pop();
-    const path = `${salonId}/${Date.now()}.${ext}`;
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("Folder", bucket || salonId);
 
-    const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: true });
-    if (error) {
-      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+    const { data, error } = await salonService.uploadImage(formData);
+    if (error || !data) {
+      toast({ title: "Upload failed", description: error ?? "Unable to upload image", variant: "destructive" });
       setPreview(null);
       setUploading(false);
       return;
     }
 
-    const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(path);
-    onUpload(urlData.publicUrl);
+    const uploadedUrl = (data as any)?.data?.Url || (data as any)?.Url;
+    if (!uploadedUrl) {
+      toast({ title: "Upload failed", description: "Invalid upload response", variant: "destructive" });
+      setPreview(null);
+      setUploading(false);
+      return;
+    }
+
+    onUpload(buildImageUrl(uploadedUrl));
     setPreview(null);
     setUploading(false);
     toast({ title: "Image uploaded!" });

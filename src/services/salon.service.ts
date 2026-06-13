@@ -73,6 +73,7 @@ function normalizeBarber(dto: BarberDto): Barber {
     id: dto.BarberId,
     salon_id: dto.SalonId,
     user_id: dto.UserId || null,
+    email: dto.Email || null,
     name: dto.Name,
     specialties: Array.isArray(dto.Specialties) ? dto.Specialties : [],
     bio: dto.Bio || null,

@@ -107,6 +107,7 @@ export interface Barber {
   id: string;
   salon_id: string;
   user_id: string | null;
+  email: string | null;
   name: string;
   specialties: string[];
   bio: string | null;
@@ -128,6 +129,7 @@ export interface BarberDto {
   BarberId: string;
   SalonId: string;
   UserId: string;
+  Email?: string;
   Name: string;
   Specialties: string[];
   Bio: string;

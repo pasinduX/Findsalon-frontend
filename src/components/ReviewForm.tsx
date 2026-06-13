@@ -30,11 +30,12 @@ const ReviewForm = ({ salonId, barberId, bookingId, userId, barberName, onSubmit
     }
     setSubmitting(true);
     const { error } = await reviewService.createReview({
-      salon_id: salonId,
-      barber_id: barberId,
-      booking_id: bookingId,
-      rating,
-      comment: comment.trim() || null,
+      SalonId: salonId,
+      BarberId: barberId,
+      BookingId: bookingId,
+      UserId: userId,
+      Rating: rating,
+      Comment: comment.trim() || undefined,
     });
     if (error) {
       if (error.includes("23505") || error.includes("duplicate")) {

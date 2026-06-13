@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { MapPin, Scissors, Search } from "lucide-react";
@@ -11,7 +11,7 @@ import { salonService } from "@/services/salon.service";
 import type { DistrictDto, Salon, SalonDto } from "@/interfaces";
 import { demoSalon } from "@/data/demoSalon";
 
-export default function SalonsPage() {
+function SalonsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const selectedArea = searchParams.get("area") || "";
@@ -71,6 +71,13 @@ export default function SalonsPage() {
     area: dto.Area,
     city: dto.City,
     phone: dto.Phone || null,
+    location: dto.Location
+      ? {
+          latitude: dto.Location.Latitude,
+          longitude: dto.Location.Longitude,
+          address: dto.Location.Address,
+        }
+      : null,
     cover_image_url: dto.CoverImageUrl || null,
     logo_url: dto.LogoUrl || null,
     owner_id: dto.OwnerId,
@@ -249,5 +256,13 @@ export default function SalonsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function SalonsPage() {
+  return (
+    <Suspense fallback={null}>
+      <SalonsPageContent />
+    </Suspense>
   );
 }
