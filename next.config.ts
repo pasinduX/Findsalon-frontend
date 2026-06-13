@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const GATEWAY_URL = process.env.API_GATEWAY_URL ?? "http://localhost:8888";
+const GATEWAY_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8888";
 
 const nextConfig: NextConfig = {
   images: {
