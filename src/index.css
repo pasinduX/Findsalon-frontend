@@ -1,0 +1,129 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 20% 99%;       /* Cool White */
+    --foreground: 313 21% 8%;       /* Deep Noir #1A1118 */
+
+    --card: 30 33% 94%;             /* Ivory Cream #F5F0EB */
+    --card-foreground: 313 21% 8%;
+
+    --popover: 30 33% 94%;
+    --popover-foreground: 313 21% 8%;
+
+    --primary: 313 21% 8%;          /* Deep Noir #1A1118 */
+    --primary-foreground: 60 17% 98%;
+
+    --secondary: 28 44% 84%;        /* Blush Sand #E8D5C4 */
+    --secondary-foreground: 313 21% 8%;
+
+    --muted: 28 44% 84%;
+    --muted-foreground: 300 8% 40%; /* Cool Mauve #6E5E6E */
+
+    --accent: 39 46% 61%;           /* Warm Gold #C9A96E */
+    --accent-foreground: 313 21% 8%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 60 17% 98%;
+
+    --border: 28 44% 84%;           /* Blush Sand #E8D5C4 */
+    --input: 28 44% 84%;
+    --ring: 39 46% 61%;             /* Warm Gold */
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 313 21% 8%;    /* Deep Noir #1A1118 */
+    --sidebar-foreground: 60 17% 98%;
+    --sidebar-primary: 39 46% 61%;       /* Warm Gold */
+    --sidebar-primary-foreground: 313 21% 8%;
+    --sidebar-accent: 300 17% 20%;       /* Deep Plum #3D2B3D */
+    --sidebar-accent-foreground: 60 17% 98%;
+    --sidebar-border: 300 17% 20%;
+    --sidebar-ring: 39 46% 61%;
+
+    --font-display: 'Playfair Display', serif;
+    --font-body: 'DM Sans', sans-serif;
+
+    --accent-subtle: 30 34% 49%;    /* Bronze #A67C52 */
+    --surface-elevated: 300 17% 20%; /* Deep Plum #3D2B3D */
+    --gold-shimmer: 39 50% 68%;     /* Warm Gold light */
+  }
+
+  .dark {
+    --background: 313 21% 8%;       /* Deep Noir #1A1118 */
+    --foreground: 60 17% 98%;       /* Soft White #FAFAF8 */
+
+    --card: 300 17% 20%;            /* Deep Plum #3D2B3D */
+    --card-foreground: 60 17% 98%;
+
+    --popover: 300 17% 20%;
+    --popover-foreground: 60 17% 98%;
+
+    --primary: 39 46% 61%;          /* Warm Gold #C9A96E */
+    --primary-foreground: 313 21% 8%;
+
+    --secondary: 300 17% 20%;       /* Deep Plum */
+    --secondary-foreground: 60 17% 98%;
+
+    --muted: 300 17% 20%;
+    --muted-foreground: 300 8% 40%; /* Cool Mauve #6E5E6E */
+
+    --accent: 39 46% 61%;           /* Warm Gold */
+    --accent-foreground: 313 21% 8%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 60 17% 98%;
+
+    --border: 300 17% 25%;
+    --input: 300 17% 22%;
+    --ring: 39 46% 61%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+}
+
+@layer utilities {
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(313 21% 8%), hsl(300 17% 20%));
+  }
+
+  .gradient-accent {
+    background: linear-gradient(135deg, hsl(39 46% 61%), hsl(30 34% 49%));
+  }
+
+  .gradient-hero {
+    background: linear-gradient(180deg, hsl(313 21% 8%) 0%, hsl(300 17% 20%) 100%);
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(39 46% 61%), hsl(39 50% 68%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .shadow-salon {
+    box-shadow: 0 4px 20px -4px hsl(313 21% 8% / 0.15);
+  }
+
+  .shadow-card-hover {
+    box-shadow: 0 8px 30px -6px hsl(313 21% 8% / 0.2);
+  }
+}
