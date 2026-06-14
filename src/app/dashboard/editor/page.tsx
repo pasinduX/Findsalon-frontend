@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { salonService } from "@/services/salon.service";
@@ -76,9 +76,10 @@ function Section({
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function SalonEditorPage() {
+function SalonEditorContent() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
 
   const [salon, setSalon] = useState<Salon | null>(null);
@@ -110,7 +111,9 @@ export default function SalonEditorPage() {
     if (!user) { router.push("/auth"); return; }
 
     const load = async () => {
-      const { data: salonData } = await salonService.getMySalon(user!.id);
+      const { data: salons } = await salonService.getMySalons(user!.id);
+      const requestedSalonId = searchParams.get("salonId");
+      const salonData = salons.find((s) => s.id === requestedSalonId) ?? salons[0];
       if (!salonData) { router.push("/dashboard/create"); return; }
 
       setSalon(salonData);
@@ -151,7 +154,7 @@ export default function SalonEditorPage() {
       setLoading(false);
     };
     load();
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, searchParams]);
 
   // ── Gallery (immediate save) ──────────────────────────────────────────────
 
@@ -328,7 +331,7 @@ export default function SalonEditorPage() {
       {/* Top bar */}
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-card shrink-0 gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <Link href="/dashboard">
+          <Link href={salon ? `/dashboard?salonId=${salon.id}` : "/dashboard"}>
             <Button variant="ghost" size="sm" className="gap-1.5 shrink-0">
               <ArrowLeft className="h-4 w-4" /> Dashboard
             </Button>
@@ -605,5 +608,13 @@ export default function SalonEditorPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SalonEditorPage() {
+  return (
+    <Suspense fallback={null}>
+      <SalonEditorContent />
+    </Suspense>
   );
 }

@@ -2,14 +2,13 @@ import { type NextRequest, NextResponse } from "next/server";
 import { auth0 } from "@/lib/auth0";
 
 const PROTECTED = ["/dashboard", "/admin", "/barber-dashboard", "/my-bookings"];
-const AUTH0_ROUTES = ["/auth/login", "/auth/logout", "/auth/callback", "/auth/profile"];
 
 function isProtectedPath(pathname: string) {
   return PROTECTED.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
 function isAuth0Route(pathname: string) {
-  return AUTH0_ROUTES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  return pathname === "/auth" || pathname.startsWith("/auth/");
 }
 
 function hasAuth0Config() {
@@ -21,7 +20,7 @@ function hasAuth0Config() {
   );
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const needsAuth0 = isAuth0Route(pathname) || isProtectedPath(pathname);
 
@@ -38,7 +37,7 @@ export async function middleware(request: NextRequest) {
 
   let res: NextResponse;
   try {
-    // Let the Auth0 SDK handle its own routes (/auth/login, /auth/logout, /auth/callback, /auth/profile)
+    // Let the Auth0 SDK handle its own routes, including /auth/access-token.
     res = await auth0.middleware(request);
   } catch (error) {
     console.error("Auth0 middleware failed", error);

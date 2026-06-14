@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Auth0Provider } from "@auth0/nextjs-auth0/client";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { PhoneVerificationModal } from "@/components/PhoneVerificationModal";
 import { useState } from "react";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -17,6 +18,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <TooltipProvider>
           <AuthProvider>
             {children}
+            <PhoneVerificationModal />
             <Toaster />
             <Sonner />
           </AuthProvider>

@@ -130,28 +130,37 @@ function unwrapList<T>(raw: any): T[] {
 
 export const salonService = {
   /**
-   * Returns the first salon owned by the given user.
-   * Pass the authenticated user's ID (Auth0 `sub` or backend UUID).
-   * The backend must recognise the ID format; if using Auth0 tokens directly,
-   * the backend should be configured to accept the Auth0 `sub` as OwnerId.
+   * Returns all salons owned by the given user.
+   * Pass the authenticated user's backend DB UserId, not the Auth0 subject.
    */
-  async getMySalon(ownerId: string) {
+  async getMySalons(ownerId: string) {
     if (typeof window === "undefined") {
-      return { data: null as Salon | null, error: "Client only" };
+      return { data: [] as Salon[], error: "Client only" };
     }
     if (!ownerId) {
-      return { data: null as Salon | null, error: "No owner ID" };
+      return { data: [] as Salon[], error: "No owner ID" };
     }
 
     const response = await api.get<any>(
       `${BASE_PATH}/FindallSalon${buildQuery({ OwnerId: ownerId })}`
     );
     if (!response.data || response.error) {
-      return { data: null as Salon | null, error: response.error || "Unable to load salon" };
+      return { data: [] as Salon[], error: response.error || "Unable to load salons" };
     }
 
     const dtos: SalonDto[] = unwrapList(response.data);
-    return { data: dtos[0] ? normalizeSalon(dtos[0]) : null, error: null };
+    return { data: dtos.map(normalizeSalon), error: null };
+  },
+
+  /**
+   * Returns the first salon owned by the given user for legacy single-salon call sites.
+   */
+  async getMySalon(ownerId: string) {
+    const response = await salonService.getMySalons(ownerId);
+    return {
+      data: response.data[0] ?? null,
+      error: response.error,
+    };
   },
 
   // ── UI-facing convenience methods (normalized) ────────────────────────────

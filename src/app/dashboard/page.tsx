@@ -32,6 +32,7 @@ function DashboardPageContent() {
   const { toast } = useToast();
 
   const [salon, setSalon] = useState<Salon | null>(null);
+  const [ownedSalons, setOwnedSalons] = useState<Salon[]>([]);
   const [barbers, setBarbers] = useState<Barber[]>([]);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [gallery, setGallery] = useState<SalonGallery[]>([]);
@@ -111,7 +112,13 @@ function DashboardPageContent() {
     if (!user) { router.push("/auth"); return; }
 
     const fetchData = async () => {
-      const { data: salonData } = await salonService.getMySalon(user!.id);
+      setLoading(true);
+      const { data: salons } = await salonService.getMySalons(user!.id);
+      if (!salons.length) { router.push("/dashboard/create"); return; }
+
+      setOwnedSalons(salons);
+      const requestedSalonId = searchParams.get("salonId");
+      const salonData = salons.find((s) => s.id === requestedSalonId) ?? salons[0];
       if (!salonData) { router.push("/dashboard/create"); return; }
 
       setSalon(salonData);
@@ -142,7 +149,7 @@ function DashboardPageContent() {
     };
 
     fetchData();
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, searchParams]);
 
   const updateSalon = async () => {
     if (!salon) return;
@@ -501,6 +508,19 @@ function DashboardPageContent() {
 
               {/* ── Action Buttons ── */}
               <div className="flex gap-2 flex-wrap">
+                {ownedSalons.length > 1 && salon && (
+                  <select
+                    value={salon.id}
+                    onChange={(event) => router.push(`/dashboard?salonId=${event.target.value}`)}
+                    className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    {ownedSalons.map((owned) => (
+                      <option key={owned.id} value={owned.id}>
+                        {owned.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 {salon && (
                   <Link href={`/salon/${salon.id}`} target="_blank">
                     <Button variant="outline" size="sm" className="gap-1.5 h-9">
@@ -509,7 +529,7 @@ function DashboardPageContent() {
                     </Button>
                   </Link>
                 )}
-                <Link href="/dashboard/editor">
+                <Link href={salon ? `/dashboard/editor?salonId=${salon.id}` : "/dashboard/editor"}>
                   <Button size="sm" className="gap-1.5 h-9 gradient-primary text-primary-foreground font-semibold">
                     <Palette className="h-3.5 w-3.5" />
                     Customize Page
@@ -1290,7 +1310,7 @@ function DashboardPageContent() {
                   <p className="text-xs text-muted-foreground mb-4">
                     Add services, a quote, working hours, and more to make your public page stand out.
                   </p>
-                  <Link href="/dashboard/editor">
+                  <Link href={salon ? `/dashboard/editor?salonId=${salon.id}` : "/dashboard/editor"}>
                     <Button className="w-full gradient-primary text-primary-foreground font-semibold gap-2">
                       <Palette className="h-4 w-4" /> Open Page Editor
                     </Button>

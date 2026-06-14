@@ -3,6 +3,8 @@ export interface User {
   email: string;
   full_name: string | null;
   avatar_url: string | null;
+  phone?: string | null;
+  phone_verified?: boolean;
   // role carries only the system-level role ("user", "admin", "moderator").
   // Salon-scoped roles (owner, barber) are derived from SalonMemberDto records.
   role: "user" | "barber" | "owner" | "admin";
@@ -39,6 +41,7 @@ export interface AuthUser {
   FullName: string;
   Email: string;
   Phone?: string;
+  PhoneVerified?: boolean;
   AvatarUrl?: string;
   GoogleAvatarUrl?: string;
   Provider?: string;

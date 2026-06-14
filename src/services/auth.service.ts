@@ -37,9 +37,16 @@ function mapAuthUserToUser(authUser: AuthUser): User {
     email: authUser.Email,
     full_name: authUser.FullName,
     avatar_url: authUser.AvatarUrl ?? authUser.GoogleAvatarUrl ?? null,
+    phone: authUser.Phone ?? null,
+    phone_verified: authUser.PhoneVerified ?? false,
     role: authUser.Role as User["role"],
     created_at: authUser.CreatedAt,
   };
+}
+
+function unwrapAuthUser(raw: any): AuthUser | null {
+  const user = raw?.User ?? raw?.user ?? raw?.data?.User ?? raw?.data?.user ?? raw?.data ?? raw;
+  return user?.UserId ? (user as AuthUser) : null;
 }
 
 export const authService = {
@@ -102,10 +109,23 @@ export const authService = {
     return api.post<any>(`${BASE_PATH}/logout`, {});
   },
 
+  async sendPhoneOtp(userId: string, phone: string) {
+    return api.post<any>(`${BASE_PATH}/phone/send-otp`, { UserId: userId, Phone: phone });
+  },
+
+  async verifyPhoneOtp(userId: string, code: string) {
+    const res = await api.post<any>(`${BASE_PATH}/phone/verify-otp`, { UserId: userId, Code: code });
+    const raw = (res.data as any)?.data ?? res.data;
+    const user = raw?.UserId ? mapAuthUserToUser(raw as AuthUser) : null;
+    if (res.error || !user) return { data: null, error: res.error ?? (res.data as any)?.message ?? "Verification failed" };
+    return { data: user, error: null };
+  },
+
   /** Find-or-create the user in the DB using their Auth0 profile. Returns the DB record. */
   async syncUser(payload: { Email: string; FullName: string; Provider?: string; GoogleId?: string; AvatarUrl?: string }) {
-    const res = await api.post<AuthUser>(`${BASE_PATH}/sync`, payload);
-    if (res.error || !res.data) return { data: null, error: res.error ?? "Sync failed" };
-    return { data: mapAuthUserToUser(res.data), error: null };
+    const res = await api.post<any>(`${BASE_PATH}/sync`, payload);
+    const user = unwrapAuthUser(res.data);
+    if (res.error || !user) return { data: null, error: res.error ?? "Sync failed" };
+    return { data: mapAuthUserToUser(user), error: null };
   },
 };

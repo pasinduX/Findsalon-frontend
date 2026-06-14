@@ -23,12 +23,15 @@ interface AuthContextType {
   memberships: SalonMemberDto[];
   isBarber: boolean;
   isOwner: boolean;
+  phoneVerified: boolean;
   /** Redirect to Auth0 Universal Login (sign-in). */
   signIn: () => void;
   /** Redirect to Auth0 Universal Login (sign-up). */
   signUp: () => void;
   signOut: () => void;
   refreshUser: () => Promise<void>;
+  /** Called after successful phone OTP verification to update local user state. */
+  onPhoneVerified: (updatedUser: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,10 +48,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const all: SalonMemberDto[] = [];
 
     if (userId) {
-      const salonRes = await salonService.getMySalon(userId);
-      if (salonRes.data) {
-        all.push({ SalonId: salonRes.data.id, SalonName: salonRes.data.name, Role: "salon_owner" });
-      }
+      const salonRes = await salonService.getMySalons(userId);
+      all.push(
+        ...(salonRes.data ?? []).map((salon) => ({
+          SalonId: salon.id,
+          SalonName: salon.name,
+          Role: "salon_owner",
+        }))
+      );
     }
 
     const barberRes = await barberService.getMyBarberProfile();
@@ -96,16 +103,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         AvatarUrl: avatarUrl,
       });
 
+      if (!dbUser?.id) {
+        setUser(null);
+        setMemberships([]);
+        setLoading(false);
+        return;
+      }
+
       setUser({
-        id: dbUser?.id ?? sub,
+        id: dbUser.id,
         email,
-        full_name: dbUser?.full_name ?? fullName,
-        avatar_url: dbUser?.avatar_url ?? avatarUrl ?? null,
-        role: (dbUser?.role ?? "user") as User["role"],
-        created_at: dbUser?.created_at ?? new Date().toISOString(),
+        full_name: dbUser.full_name ?? fullName,
+        avatar_url: dbUser.avatar_url ?? avatarUrl ?? null,
+        role: (dbUser.role ?? "user") as User["role"],
+        created_at: dbUser.created_at ?? new Date().toISOString(),
       });
 
-      await refreshMemberships(dbUser?.id ?? sub);
+      await refreshMemberships(dbUser.id);
       setLoading(false);
     };
 
@@ -123,16 +137,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const refreshUser = useCallback(async () => {
-    if (!auth0User) return;
-    await refreshMemberships(auth0User.sub as string);
-  }, [auth0User, refreshMemberships]);
+    if (!user?.id) return;
+    await refreshMemberships(user.id);
+  }, [user?.id, refreshMemberships]);
+
+  const onPhoneVerified = useCallback((updatedUser: User) => {
+    setUser(updatedUser);
+  }, []);
 
   const isBarber = memberships.some((m) => m.Role === "barber");
   const isOwner = memberships.some((m) => m.Role === "salon_owner");
+  const phoneVerified = user?.phone_verified ?? true;
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, memberships, isBarber, isOwner, signIn, signUp, signOut, refreshUser }}
+      value={{ user, loading, memberships, isBarber, isOwner, phoneVerified, signIn, signUp, signOut, refreshUser, onPhoneVerified }}
     >
       {children}
     </AuthContext.Provider>

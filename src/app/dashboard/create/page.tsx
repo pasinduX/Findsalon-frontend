@@ -336,7 +336,7 @@ export default function CreateSalonPage() {
     if (!user || !isValid) return;
     setLoading(true);
 
-    const { error } = await salonService.createSalon({
+    const { data: createdSalon, error } = await salonService.createSalon({
       OwnerId: user.id,
       name: name.trim(),
       description: description.trim() || null,
@@ -358,8 +358,17 @@ export default function CreateSalonPage() {
         title: "Salon created!",
         description: location ? "Location saved — customers can navigate to you." : "You can add a map location later from settings.",
       });
-      const { data: salon } = await salonService.getMySalon(user!.id);
-      router.push(salon ? `/salon/${salon.id}` : "/dashboard");
+      const createdSalonId = (createdSalon as any)?.data?.SalonId || (createdSalon as any)?.SalonId;
+      if (createdSalonId) {
+        router.push(`/dashboard?salonId=${createdSalonId}`);
+        return;
+      }
+
+      const { data: salons } = await salonService.getMySalons(user!.id);
+      const newestSalon = [...salons].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )[0];
+      router.push(newestSalon ? `/dashboard?salonId=${newestSalon.id}` : "/dashboard");
     }
   };
 
