@@ -39,12 +39,18 @@ function normalizeBooking(dto: BookingDto): Booking {
     id: dto.BookingId,
     user_id: dto.UserId || null,
     salon_id: dto.SalonId,
+    salon_name: dto.SalonName || null,
+    salon_address: dto.SalonAddress || null,
+    salon_area: dto.SalonArea || null,
     barber_id: dto.BarberId,
+    barber_name: dto.BarberName || null,
     time_slot_id: dto.SlotId,
     notes: dto.Notes || null,
     status: dto.Status as Booking["status"],
     booking_type: dto.BookingType as Booking["booking_type"],
     customer_name: dto.CustomerName || null,
+    start_time: dto.StartTime || null,
+    end_time: dto.EndTime || null,
     created_at: dto.CreatedAt,
   };
 }
@@ -150,8 +156,8 @@ export const bookingService = {
   // ── Real-time Availability Engine ────────────────────────────────────────
 
   /** GET /Availability — returns open time slots for a barber + service + date */
-  async getAvailability(barberId: string, serviceId: string, date: string) {
-    const q = buildQuery({ BarberId: barberId, ServiceId: serviceId, Date: date });
+  async getAvailability(barberId: string, serviceId: string, date: string, includeUnavailable = false) {
+    const q = buildQuery({ BarberId: barberId, ServiceId: serviceId, Date: date, IncludeUnavailable: includeUnavailable });
     return api.get<AvailableSlot[]>(`${BASE_PATH}/Availability${q}`);
   },
 
@@ -162,9 +168,11 @@ export const bookingService = {
 
   // ── My Bookings (customer-facing) ────────────────────────────────────────
 
-  /** Returns all bookings for the currently logged-in user (JWT userId used server-side). */
-  async getMyBookings(): Promise<{ data: Booking[] | null; error: string | null }> {
-    const res = await api.get<{ Data: BookingDto[] }>(`${BASE_PATH}/FindallBookingByUser`);
+  /** Returns all bookings for the given user, enriched with salon and barber names. */
+  async getMyBookings(userId: string): Promise<{ data: Booking[] | null; error: string | null }> {
+    const res = await api.get<{ Data: BookingDto[] }>(
+      `${BASE_PATH}/FindallBookingByUser?UserId=${encodeURIComponent(userId)}`
+    );
     if (res.error || !res.data) return { data: null, error: res.error };
     const bookings = (res.data.Data ?? []).map(normalizeBooking);
     return { data: bookings, error: null };

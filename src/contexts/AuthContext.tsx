@@ -115,6 +115,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email,
         full_name: dbUser.full_name ?? fullName,
         avatar_url: dbUser.avatar_url ?? avatarUrl ?? null,
+        phone: dbUser.phone ?? null,
+        phone_verified: dbUser.phone_verified ?? false,
         role: (dbUser.role ?? "user") as User["role"],
         created_at: dbUser.created_at ?? new Date().toISOString(),
       });
@@ -147,7 +149,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const isBarber = memberships.some((m) => m.Role === "barber");
   const isOwner = memberships.some((m) => m.Role === "salon_owner");
-  const phoneVerified = user?.phone_verified ?? true;
+  const phoneVerified = user ? !!user.phone_verified : true;
 
   return (
     <AuthContext.Provider

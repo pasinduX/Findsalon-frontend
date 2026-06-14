@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { format, addDays, startOfToday, parseISO } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
+import JsonLd from "@/components/JsonLd";
+import { absoluteUrl, breadcrumbJsonLd } from "@/lib/seo";
 import { buildImageUrl } from "@/lib/utils";
 import ReviewsList from "@/components/ReviewsList";
 import { useAuth } from "@/contexts/AuthContext";
@@ -123,7 +125,7 @@ export default function SalonDetailPage() {
 
     setSlotsLoading(true);
     bookingService
-      .getAvailability(selectedBarber, selectedService, selectedDate)
+      .getAvailability(selectedBarber, selectedService, selectedDate, true)
       .then(({ data }) => {
         setAvailableSlots(data || []);
         setSelectedSlotTime(null);
@@ -152,6 +154,9 @@ export default function SalonDetailPage() {
       BarberId: selectedBarber,
       SalonId: id,
       ServiceId: selectedService,
+      CustomerId: user.id,
+      CustomerName: user.full_name || user.email,
+      CustomerPhone: user.phone || undefined,
       StartTime: selectedSlotTime,
       Notes: bookingNotes.trim() || undefined,
     });
@@ -163,7 +168,7 @@ export default function SalonDetailPage() {
       setBookingNotes("");
       // Refresh available slots
       bookingService
-        .getAvailability(selectedBarber, selectedService, selectedDate)
+        .getAvailability(selectedBarber, selectedService, selectedDate, true)
         .then(({ data }) => setAvailableSlots(data || []));
     }
     setBooking(false);
@@ -179,6 +184,8 @@ export default function SalonDetailPage() {
       </div>
     );
   }
+
+  const bookableSlots = availableSlots.filter((slot) => slot.IsAvailable !== false && slot.Status !== "booked" && slot.Status !== "blocked");
 
   if (!salon) {
     return (
@@ -197,16 +204,59 @@ export default function SalonDetailPage() {
   );
 
   const selectedServiceObj = services.find((s) => s.id === selectedService);
+  const salonImage = buildImageUrl(salon.cover_image_url);
+  const salonJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BeautySalon",
+    name: salon.name,
+    description: salon.description || `Book appointments at ${salon.name} on FindSalonLK.`,
+    url: absoluteUrl(`/salon/${salon.id}`),
+    ...(salonImage ? { image: salonImage } : {}),
+    ...(salon.phone ? { telephone: salon.phone } : {}),
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: salon.address,
+      addressLocality: salon.city || salon.area,
+      addressRegion: salon.area,
+      addressCountry: "LK",
+    },
+    ...(salon.location
+      ? {
+          geo: {
+            "@type": "GeoCoordinates",
+            latitude: salon.location.latitude,
+            longitude: salon.location.longitude,
+          },
+        }
+      : {}),
+    hasOfferCatalog: {
+      "@type": "OfferCatalog",
+      name: `${salon.name} services`,
+      itemListElement: services.map((service) => ({
+        "@type": "Offer",
+        name: service.name,
+        price: service.price,
+        priceCurrency: "LKR",
+        itemOffered: {
+          "@type": "Service",
+          name: service.name,
+          description: service.description || service.name,
+        },
+      })),
+    },
+  };
 
   return (
     <div className="min-h-screen bg-background">
+      <JsonLd data={salonJsonLd} />
+      <JsonLd data={breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Salons", path: "/salons" }, { name: salon.name, path: `/salon/${salon.id}` }])} />
       <Navbar />
 
       {/* HERO */}
       <section className="relative h-screen min-h-[500px] -mt-16">
         {salon.cover_image_url ? (
           <img
-            src={buildImageUrl(salon.cover_image_url)}
+            src={salonImage}
             alt={salon.name}
             className="w-full h-full object-cover"
           />
@@ -541,26 +591,36 @@ export default function SalonDetailPage() {
             ) : (
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground">
-                  {availableSlots.length} slot{availableSlots.length !== 1 ? "s" : ""} available
+                  {bookableSlots.length} of {availableSlots.length} slot{availableSlots.length !== 1 ? "s" : ""} available
                   {selectedServiceObj ? ` · ${selectedServiceObj.duration} min each` : ""}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {availableSlots.map((slot) => (
-                    <button
-                      key={slot.StartTime}
-                      onClick={() => setSelectedSlotTime(
-                        selectedSlotTime === slot.StartTime ? null : slot.StartTime
-                      )}
-                      className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                        selectedSlotTime === slot.StartTime
-                          ? "gradient-accent text-accent-foreground shadow-sm ring-2 ring-accent"
-                          : "bg-card border border-border hover:border-primary"
-                      }`}
-                    >
-                      <Clock className="h-3.5 w-3.5 inline mr-1.5" />
-                      {slot.DisplayStart} – {slot.DisplayEnd}
-                    </button>
-                  ))}
+                  {availableSlots.map((slot) => {
+                    const isUnavailable = slot.IsAvailable === false || slot.Status === "booked" || slot.Status === "blocked";
+                    const selected = selectedSlotTime === slot.StartTime;
+                    return (
+                      <button
+                        key={slot.StartTime}
+                        disabled={isUnavailable}
+                        onClick={() => setSelectedSlotTime(selected ? null : slot.StartTime)}
+                        className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                          selected
+                            ? "gradient-accent text-accent-foreground shadow-sm ring-2 ring-accent"
+                            : isUnavailable
+                              ? "bg-muted border border-border text-muted-foreground opacity-70 cursor-not-allowed"
+                              : "bg-card border border-border hover:border-primary"
+                        }`}
+                      >
+                        <Clock className="h-3.5 w-3.5 inline mr-1.5" />
+                        {slot.DisplayStart} – {slot.DisplayEnd}
+                        {isUnavailable && (
+                          <span className="ml-2 text-xs">
+                            {slot.Status === "booked" ? "Booked" : "Unavailable"}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}

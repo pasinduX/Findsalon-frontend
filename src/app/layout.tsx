@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
+import { createMetadata, siteName, siteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "FindSalonLK — Find & Book Salons in Sri Lanka",
-  description:
-    "Browse the best salons across Sri Lanka. Find barbers, pick your time, and book instantly.",
-  openGraph: {
-    title: "FindSalonLK",
-    description: "Find and book your ideal salon in Sri Lanka.",
-    type: "website",
+  metadataBase: new URL(siteUrl),
+  applicationName: siteName,
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
   },
+  ...createMetadata({
+    title: "FindSalonLK | Book Salons and Barbers in Sri Lanka",
+  }),
 };
 
 export default function RootLayout({

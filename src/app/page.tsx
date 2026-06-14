@@ -8,9 +8,28 @@ import { Search, MapPin, Scissors, Clock, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
+import JsonLd from "@/components/JsonLd";
+import { faqJsonLd, organizationJsonLd, softwareApplicationJsonLd, websiteJsonLd } from "@/lib/seo";
 import { salonService } from "@/services/salon.service";
 import type { DistrictDto } from "@/interfaces";
 
+const homepageFaqs = [
+  {
+    question: "How do I book a salon appointment in Sri Lanka?",
+    answer:
+      "Search your city or area on FindSalonLK, open a salon profile, choose an available service, barber, date, and time, then confirm the appointment from the booking section.",
+  },
+  {
+    question: "Can salon owners manage more than one salon?",
+    answer:
+      "Yes. A salon owner account can create and manage multiple salon profiles from the owner dashboard.",
+  },
+  {
+    question: "What can customers compare before booking?",
+    answer:
+      "Customers can review salon location, services, prices, staff, gallery images, contact details, reviews, and available appointment slots when those details are published.",
+  },
+];
 
 export default function HomePage() {
   const [search, setSearch] = useState("");
@@ -44,6 +63,10 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <JsonLd data={organizationJsonLd()} />
+      <JsonLd data={websiteJsonLd()} />
+      <JsonLd data={softwareApplicationJsonLd()} />
+      <JsonLd data={faqJsonLd(homepageFaqs)} />
       <Navbar />
 
       {/* Hero Section */}
@@ -176,6 +199,26 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Answer Engine Content */}
+      <section className="py-20 container mx-auto px-4">
+        <div className="max-w-3xl mb-10">
+          <h2 className="font-display text-3xl md:text-4xl font-bold mb-3">
+            Salon booking answers
+          </h2>
+          <p className="text-muted-foreground">
+            Quick answers for people searching for salon appointments, barber shops, and beauty salons in Sri Lanka.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-5">
+          {homepageFaqs.map((item) => (
+            <div key={item.question} className="rounded-lg border border-border bg-card p-6">
+              <h3 className="font-display text-lg font-semibold mb-2">{item.question}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{item.answer}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* CTA for salon owners */}
       <section className="py-20 container mx-auto px-4 text-center">
         <motion.div
@@ -200,8 +243,16 @@ export default function HomePage() {
       </section>
 
       <footer className="py-8 border-t border-border">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground space-y-3">
           <p>© {new Date().getFullYear()} FindSalonLK. Find your perfect salon in Sri Lanka.</p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link href="/about">About</Link>
+            <Link href="/pricing">Pricing</Link>
+            <Link href="/contact">Contact</Link>
+            <Link href="/privacy">Privacy</Link>
+            <Link href="/terms">Terms</Link>
+            <Link href="/city/colombo">Salons in Colombo</Link>
+          </div>
         </div>
       </footer>
     </div>

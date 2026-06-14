@@ -55,6 +55,9 @@ export interface AvailableSlot {
   EndTime: string;      // UTC RFC3339
   DisplayStart: string; // pre-formatted in salon timezone, e.g. "09:30"
   DisplayEnd: string;
+  Status?: "available" | "booked" | "blocked";
+  IsAvailable?: boolean;
+  UnavailableReason?: string;
 }
 
 /** Request body for POST /DirectBooking */
@@ -62,9 +65,11 @@ export interface DirectBookingPayload {
   BarberId: string;
   SalonId: string;
   ServiceId: string;
+  CustomerId?: string;
   /** RFC3339 UTC start time, taken from AvailableSlot.StartTime */
   StartTime: string;
   CustomerName?: string;
+  CustomerPhone?: string;
   Notes?: string;
 }
 
@@ -98,18 +103,19 @@ export interface Booking {
   id: string;
   user_id: string | null;
   salon_id: string;
+  salon_name: string | null;
+  salon_address: string | null;
+  salon_area: string | null;
   barber_id: string;
+  barber_name: string | null;
   time_slot_id: string;
   notes: string | null;
-  status: "pending" | "confirmed" | "cancelled" | "completed";
-  booking_type: "online" | "walk_in";
+  status: "pending" | "confirmed" | "cancelled" | "completed" | "booked";
+  booking_type: "online" | "walk_in" | "direct";
   customer_name: string | null;
+  start_time: string | null;
+  end_time: string | null;
   created_at: string;
-
-  // Joined relations (optional)
-  salons?: { name: string; area: string } | null;
-  barbers?: { name: string } | null;
-  time_slots?: { date: string; start_time: string; end_time: string } | null;
 }
 
 export interface CreateBookingPayload {
@@ -153,15 +159,22 @@ export interface BookingDto {
   BookingId: string;
   UserId: string;
   SalonId: string;
+  SalonName?: string;
+  SalonAddress?: string;
+  SalonArea?: string;
   BarberId: string;
+  BarberName?: string;
   SlotId: string;
+  ServiceId?: string;
   Status: string;
   BookingType: string;
   CustomerName: string;
   Notes: string;
+  StartTime?: string;
+  EndTime?: string;
   CreatedAt: string;
-  UpdatedAt: string;
-  Deleted: boolean;
+  UpdatedAt?: string;
+  Deleted?: boolean;
 }
 
 export interface PaginatedBookingResponse {
