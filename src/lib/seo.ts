@@ -7,6 +7,9 @@ export const siteUrl = (
 
 export const siteName = "FindSalonLK";
 
+export const brandImageUrl =
+  "https://findsalon-bucket.s3.us-east-1.amazonaws.com/gallery/3c2fb8de-442e-4954-a181-ba4eb0ed230f.png";
+
 export const defaultDescription =
   "Book salon appointments online in Sri Lanka. Find salons, barbers, beauty services, bridal services, prices, availability, and reviews in one place.";
 
@@ -99,7 +102,7 @@ export function organizationJsonLd() {
     "@type": "Organization",
     name: siteName,
     url: siteUrl,
-    logo: absoluteUrl("/favicon.ico"),
+    logo: brandImageUrl,
     areaServed: "Sri Lanka",
     description: defaultDescription,
   };

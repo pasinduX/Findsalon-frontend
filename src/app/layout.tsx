@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
-import { createMetadata, siteName, siteUrl } from "@/lib/seo";
+import { brandImageUrl, createMetadata, siteName, siteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   applicationName: siteName,
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
+    icon: brandImageUrl,
+    shortcut: brandImageUrl,
+    apple: brandImageUrl,
   },
   ...createMetadata({
     title: "FindSalonLK | Book Salons and Barbers in Sri Lanka",

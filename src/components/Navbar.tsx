@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Scissors, User, LogOut, LayoutDashboard, Store, Plus, Menu, X, Calendar } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { salonService } from "@/services/salon.service";
 import type { Salon } from "@/interfaces";
 
@@ -13,6 +13,7 @@ const Navbar = () => {
   const [ownedSalons, setOwnedSalons] = useState<Salon[]>([]);
   const [salonsOpen, setSalonsOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navRef = useRef<HTMLElement | null>(null);
 
   const closeMenus = () => {
     setSalonsOpen(false);
@@ -37,11 +38,37 @@ const Navbar = () => {
     };
   }, [user]);
 
+  useEffect(() => {
+    if (!mobileOpen) return;
+
+    const handleOutsideClick = (event: MouseEvent | TouchEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (!navRef.current?.contains(target)) {
+        closeMenus();
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeMenus();
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("touchstart", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [mobileOpen]);
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+    <nav ref={navRef} className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex min-w-0 items-center gap-2" onClick={closeMenus}>
-          <Scissors className="h-6 w-6 text-primary" />
+          <Scissors className="h-6 w-6 shrink-0 text-primary" />
           <span className="truncate font-display text-xl font-bold text-foreground">FindSalonLK</span>
         </Link>
 
